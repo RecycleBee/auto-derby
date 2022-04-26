@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Callable, Optional, Text
 
 from ... import action, templates, terminal
@@ -15,15 +16,23 @@ from .globals import g
 
 _LOGGER = logging.getLogger(__name__)
 
+can_choose_running_style = True
 
 def _choose_running_style(ctx: Context, race1: Race) -> None:
     scene = PaddockScene.enter(ctx)
     style_scores = sorted(race1.style_scores_v2(ctx), key=lambda x: x[1], reverse=True)
+    global can_choose_running_style
+    if can_choose_running_style:
+        for style, score in style_scores:
+            _LOGGER.info("running style score:\t%.2f:\t%s", score, style)
 
-    for style, score in style_scores:
-        _LOGGER.info("running style score:\t%.2f:\t%s", score, style)
-
-    scene.choose_runing_style(style_scores[0][0])
+        if (
+            ctx.turn_count() <= 14
+        ):
+            scene.choose_runing_style(style_scores[0][0])
+        else:
+                scene.choose_runing_style(style_scores[0][0])
+        can_choose_running_style = False
 
 
 _RACE_ORDER_TEMPLATES = {
@@ -49,7 +58,7 @@ def _retry_method(ctx: Context) -> Optional[Callable[[], None]]:
 
 
 def _handle_race_result(ctx: Context, race: Race):
-    action.wait_tap_image(templates.RACE_RESULT_BUTTON)
+    action.wait_tap_image_as_fucked(templates.RACE_RESULT_BUTTON)
 
     res = RaceResult()
     res.ctx = ctx.clone()
@@ -60,18 +69,18 @@ def _handle_race_result(ctx: Context, race: Race):
     action.tap(pos)
 
     if ctx.scenario == ctx.SCENARIO_CLIMAX and ctx.date[0] < 4:
-        tmpl, pos = action.wait_image_stable(
+        tmpl, pos = action.wait_image(
             templates.CLOSE_BUTTON,
             templates.SINGLE_MODE_CLIMAX_RIVAL_RACE_WIN,
             templates.SINGLE_MODE_CLIMAX_RIVAL_RACE_DRAW,
             templates.SINGLE_MODE_CLIMAX_RIVAL_RACE_LOSE,
         )
+        time.sleep(0.15)        
         action.tap(pos)
         if tmpl.name != templates.CLOSE_BUTTON:
-            _, pos = action.wait_image_stable(templates.CLOSE_BUTTON)
-            action.tap(pos)
+            action.wait_tap_image_V2(templates.CLOSE_BUTTON)
 
-    tmpl, pos = action.wait_image_stable(
+    tmpl, pos = action.wait_image(
         templates.GREEN_NEXT_BUTTON,
         templates.SINGLE_MODE_CONTINUE,
     )
@@ -89,6 +98,11 @@ def _handle_race_result(ctx: Context, race: Race):
             return
 
     action.tap(pos)
+    time.sleep(0.15)
+    action.tap(pos)
+    time.sleep(0.05)
+    action.tap(pos)
+    
     if res.is_failed:
         ctx.mood = {
             ctx.MOOD_VERY_BAD: ctx.MOOD_BAD,
@@ -130,7 +144,8 @@ class RaceCommand(Command):
             )
             if tmpl.name == templates.RACE_RESULT_BUTTON:
                 break
-            action.tap(pos)
+            action.tap(pos)            
+
         ctx.race_turns.add(ctx.turn_count())
         ctx.race_history.append(ctx, self.race)
 
