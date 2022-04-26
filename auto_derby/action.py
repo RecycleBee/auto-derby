@@ -122,6 +122,45 @@ def wait_tap_image(
         last_pos = pos
     tap((pos[0] + x, pos[1] + y))
 
+def wait_tap_image_twice(
+    name: Union[Text, template.Specification], *, x: int = 0, y: int = 0
+) -> None:
+    _, last_pos = wait_image(name)
+    while True:
+        _, pos = wait_image(name)
+        if pos == last_pos:
+            break
+        last_pos = pos
+    tap((pos[0] + x, pos[1] + y))
+    time.sleep(0.5)
+    tap((pos[0] + x, pos[1] + y))
+
+def wait_tap_image_as_fucked(
+    name: Union[Text, template.Specification], *, x: int = 0, y: int = 0
+) -> None:
+    _, last_pos = wait_image(name)
+    while True:
+        _, pos = wait_image(name)
+        if pos == last_pos:
+            break
+        last_pos = pos
+    tap((pos[0] + x, pos[1] + y))
+    time.sleep(0.35)
+    tap((pos[0] + x, pos[1] + y))
+    time.sleep(0.05)
+    tap((pos[0] + x, pos[1] + y))
+
+def wait_tap_image_V2(
+    name: Union[Text, template.Specification], *, x: int = 0, y: int = 0
+) -> None:
+    _, last_pos = wait_image(name)
+    while True:
+        _, pos = wait_image(name)
+        if pos == last_pos:
+            break
+        last_pos = pos
+    time.sleep(0.1)
+    tap((pos[0] + x, pos[1] + y))
 
 def swipe(point: Tuple[int, int], *, dx: int = 0, dy: int = 0, duration: float = 0.1):
     clients.current().swipe(point, dx=dx, dy=dy, duration=duration)
